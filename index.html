@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calculadora de Porcentagem</title>
+  <meta name="description" content="Calculadora de porcentagem simples em JavaScript vanilla, HTML e CSS." />
+  <style>
+    :root{
+      --bg: #0b1020;           /* fundo escuro elegante */
+      --card: #121733;
+      --muted: #8ea3c0;
+      --text: #e9eef9;
+      --accent: #7aa2ff;       /* azul suave */
+      --accent-2:#5cf0d8;      /* ciano sutil */
+      --error: #ff6b6b;
+      --ok: #36d399;
+      --focus: 0 0 0 3px rgba(122,162,255,.35);
+      --radius: 14px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 10% 10%, #151b38 0%, var(--bg) 55%),
+                  radial-gradient(800px 800px at 90% 10%, #0f1a2b 0%, var(--bg) 60%);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .app{
+      width: 100%;
+      max-width: 920px;
+    }
+
+    header{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    h1{
+      font-weight: 700;
+      font-size: clamp(22px, 3.8vw, 34px);
+      letter-spacing: .3px;
+      margin: 0;
+      display: flex; align-items: center; gap: 10px;
+    }
+    h1 .spark{ font-size: .9em; color: var(--accent-2); }
+    .muted{ color: var(--muted); }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    /* Tabs */
+    .tabs{ display: grid; grid-template-columns: repeat(4, 1fr); }
+    .tab{
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 14px 10px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      user-select: none;
+      font-weight: 600;
+      letter-spacing: .2px;
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.05));
+    }
+    .tab[aria-selected="true"]{
+      color: var(--bg);
+      background: linear-gradient(180deg, var(--accent), #7aa2ffcc);
+      border-bottom-color: transparent;
+    }
+
+    .panel{ display: none; padding: 18px; }
+    .panel.active{ display: grid; gap: 14px; }
+
+    .row{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 640px){ .row{ grid-template-columns: 1fr; } }
+
+    label{ font-size: 14px; color: var(--muted); }
+    .field{ display: grid; gap: 6px; }
+    input[type="number"]{
+      width: 100%;
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,.08);
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 12px;
+      outline: none;
+      font-size: 16px;
+      transition: transform .05s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    input[type="number"]:focus{
+      box-shadow: var(--focus);
+      border-color: var(--accent);
+    }
+
+    .actions{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+    }
+
+    .btn{
+      appearance: none;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-weight: 700;
+      letter-spacing: .2px;
+      cursor: pointer;
+      transition: transform .04s ease, filter .2s ease;
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{
+      background: linear-gradient(180deg, var(--accent), #6f94ff);
+      color: #06143a;
+    }
+    .btn.ghost{
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .result{
+      background: linear-gradient(180deg, rgba(122,162,255,.15), rgba(92,240,216,.12));
+      border: 1px solid rgba(122,162,255,.35);
+      color: var(--text);
+      padding: 14px;
+      border-radius: 12px;
+      font-size: clamp(16px, 2.6vw, 18px);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .result b{ font-size: 1.05em; }
+    .result small{ color: var(--muted); }
+
+    footer{
+      margin-top: 14px; color: var(--muted); font-size: 13px; text-align: center;
+    }
+    .kbd{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background:#0d1329; border:1px solid rgba(255,255,255,.08); padding:2px 6px; border-radius:6px; }
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Calculadora de Porcentagem">
+
+
+    <section class="card" id="calc">
+      <div class="tabs" role="tablist" aria-label="Modos de cálculo">
+        <button class="tab" role="tab" aria-selected="true" aria-controls="p1" id="t1">x% de N</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="p2" id="t2">Quanto % é A de B</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="p3" id="t3">Aumentar em x%</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="p4" id="t4">Reduzir em x%</button>
+      </div>
+
+      <!-- Painel 1: x% de N -->
+      <div class="panel active" id="p1" role="tabpanel" aria-labelledby="t1">
+        <div class="row">
+          <div class="field">
+            <label for="p1_percent">Porcentagem (%)</label>
+            <input id="p1_percent" type="number" inputmode="decimal" placeholder="Ex.: 15" min="-100000" step="any">
+          </div>
+          <div class="field">
+            <label for="p1_number">Número (N)</label>
+            <input id="p1_number" type="number" inputmode="decimal" placeholder="Ex.: 250" step="any">
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="p1_calc">Calcular</button>
+          <button class="btn ghost" data-clear>Limpar</button>
+        </div>
+        <div class="result" aria-live="polite"><span>Resultado</span><b id="p1_out">—</b></div>
+      </div>
+
+      <!-- Painel 2: Quanto % é A de B -->
+      <div class="panel" id="p2" role="tabpanel" aria-labelledby="t2">
+        <div class="row">
+          <div class="field">
+            <label for="p2_a">Parte (A)</label>
+            <input id="p2_a" type="number" inputmode="decimal" placeholder="Ex.: 30" step="any">
+          </div>
+          <div class="field">
+            <label for="p2_b">Total (B)</label>
+            <input id="p2_b" type="number" inputmode="decimal" placeholder="Ex.: 120" step="any">
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="p2_calc">Calcular</button>
+          <button class="btn ghost" data-clear>Limpar</button>
+        </div>
+        <div class="result" aria-live="polite"><span>Resultado</span><b id="p2_out">—</b></div>
+      </div>
+
+      <!-- Painel 3: Aumentar em x% -->
+      <div class="panel" id="p3" role="tabpanel" aria-labelledby="t3">
+        <div class="row">
+          <div class="field">
+            <label for="p3_number">Número base</label>
+            <input id="p3_number" type="number" inputmode="decimal" placeholder="Ex.: 200" step="any">
+          </div>
+          <div class="field">
+            <label for="p3_percent">Aumento (%)</label>
+            <input id="p3_percent" type="number" inputmode="decimal" placeholder="Ex.: 12" step="any">
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="p3_calc">Calcular</button>
+          <button class="btn ghost" data-clear>Limpar</button>
+        </div>
+        <div class="result" aria-live="polite"><span>Número final</span><b id="p3_out">—</b></div>
+      </div>
+
+      <!-- Painel 4: Reduzir em x% -->
+      <div class="panel" id="p4" role="tabpanel" aria-labelledby="t4">
+        <div class="row">
+          <div class="field">
+            <label for="p4_number">Número base</label>
+            <input id="p4_number" type="number" inputmode="decimal" placeholder="Ex.: 200" step="any">
+          </div>
+          <div class="field">
+            <label for="p4_percent">Redução (%)</label>
+            <input id="p4_percent" type="number" inputmode="decimal" placeholder="Ex.: 15" step="any">
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="p4_calc">Calcular</button>
+          <button class="btn ghost" data-clear>Limpar</button>
+        </div>
+        <div class="result" aria-live="polite"><span>Número final</span><b id="p4_out">—</b></div>
+      </div>
+    </section>
+
+    <footer>
+      Dica: pressione <span class="kbd">Enter</span> para calcular e <span class="kbd">Esc</span> para limpar.
+    </footer>
+  </div>
+
+  <script>
+    // Utilidades numéricas seguras
+    const toNum = (v) => {
+      const n = typeof v === 'number' ? v : parseFloat(String(v).replace(',', '.'));
+      return Number.isFinite(n) ? n : NaN;
+    };
+    const fmt = (n) => {
+      if (!Number.isFinite(n)) return '—';
+      // Formata com no máx. 6 casas, removendo zeros finais
+      const s = n.toLocaleString('pt-BR', { maximumFractionDigits: 6 });
+      return s;
+    };
+
+    // Acessibilidade: alternância de tabs
+    const tabs = Array.from(document.querySelectorAll('.tab'));
+    const panels = Array.from(document.querySelectorAll('.panel'));
+    tabs.forEach((tab, i) => {
+      tab.addEventListener('click', () => activateTab(i));
+      tab.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight') activateTab((i + 1) % tabs.length);
+        if (e.key === 'ArrowLeft') activateTab((i - 1 + tabs.length) % tabs.length);
+      });
+    });
+    function activateTab(i){
+      tabs.forEach((t, idx) => {
+        const selected = idx === i;
+        t.setAttribute('aria-selected', selected);
+        panels[idx].classList.toggle('active', selected);
+      });
+      const firstInput = panels[i].querySelector('input');
+      if (firstInput) firstInput.focus();
+    }
+
+    // Limpar campos do painel ativo
+    document.querySelectorAll('[data-clear]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const panel = e.target.closest('.panel');
+        panel.querySelectorAll('input').forEach(inp => inp.value = '');
+        const out = panel.querySelector('b[id$="_out"]');
+        if (out) out.textContent = '—';
+        const first = panel.querySelector('input');
+        if (first) first.focus();
+      });
+    });
+
+    // Teclas rápidas globais
+    window.addEventListener('keydown', (e) => {
+      const active = document.querySelector('.panel.active');
+      if (!active) return;
+      if (e.key === 'Escape'){
+        active.querySelectorAll('input').forEach(inp => inp.value = '');
+        const out = active.querySelector('b[id$="_out"]');
+        if (out) out.textContent = '—';
+      }
+      if (e.key === 'Enter'){
+        const btn = active.querySelector('button[id$="_calc"]');
+        if (btn) btn.click();
+      }
+    });
+
+    // Cálculos
+    // 1) x% de N
+    document.getElementById('p1_calc').addEventListener('click', () => {
+      const p = toNum(document.getElementById('p1_percent').value);
+      const n = toNum(document.getElementById('p1_number').value);
+      const out = document.getElementById('p1_out');
+      if (!Number.isFinite(p) || !Number.isFinite(n)) return out.textContent = 'Informe valores válidos';
+      out.textContent = fmt((p/100) * n);
+    });
+
+    // 2) Quanto % é A de B
+    document.getElementById('p2_calc').addEventListener('click', () => {
+      const a = toNum(document.getElementById('p2_a').value);
+      const b = toNum(document.getElementById('p2_b').value);
+      const out = document.getElementById('p2_out');
+      if (!Number.isFinite(a) || !Number.isFinite(b)) return out.textContent = 'Informe valores válidos';
+      if (b === 0) return out.textContent = 'B não pode ser 0';
+      out.textContent = fmt((a/b) * 100) + ' %';
+    });
+
+    // 3) Aumentar em x%
+    document.getElementById('p3_calc').addEventListener('click', () => {
+      const n = toNum(document.getElementById('p3_number').value);
+      const p = toNum(document.getElementById('p3_percent').value);
+      const out = document.getElementById('p3_out');
+      if (!Number.isFinite(n) || !Number.isFinite(p)) return out.textContent = 'Informe valores válidos';
+      out.textContent = fmt(n * (1 + p/100));
+    });
+
+    // 4) Reduzir em x%
+    document.getElementById('p4_calc').addEventListener('click', () => {
+      const n = toNum(document.getElementById('p4_number').value);
+      const p = toNum(document.getElementById('p4_percent').value);
+      const out = document.getElementById('p4_out');
+      if (!Number.isFinite(n) || !Number.isFinite(p)) return out.textContent = 'Informe valores válidos';
+      out.textContent = fmt(n * (1 - p/100));
+    });
+  </script>
+</body>
+</html>
